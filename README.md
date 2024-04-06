@@ -1038,7 +1038,13 @@ Congratulations, you built a CRUD app, similar to the ones we deploy into our en
 
 ### `Part VI - Containerize the application`
 
-Create a dockerfile with the following contents:
+In this section, we will build a docker image based on the app we built, deploy a postgresql instance using the bitnami helm chart, and deploy our application in a minikube cluster:
+
+#### Create and Ship the Image:
+
+Create a dockerfile with the following contents: 
+
+`Note`: change my name to your app name in the SNAPSHOT.
 
 ```Dockerfile
 FROM openjdk:17-jdk-slim AS build
@@ -1057,7 +1063,27 @@ EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
 ```
 
-### Create the Kubernetes Objects
+Before continuing, verify docker desktop is initialized, you have a `dockerhub` account, and that you can login via the CLI:
+
+```shell
+sudo docker login -u <your-username>
+
+# enter your password when prompted
+```
+
+Build and tag the docker image:
+
+```shell
+sudo docker build -t <your-docker-username>/demo-swf-app-<yourname>:latest .
+```
+
+Ship the docker image to `hub.docker.io`:
+
+```shell
+sudo docker push <your-docker-username>/demo-swf-app-<yourname>:latest
+```
+
+### Start the Cluster and Deploy Postgresql:
 
 Start a local kubernetes cluster:
 
@@ -1067,142 +1093,150 @@ minikube start
 
 Setup the folder and file structure to generate helm templates and kubernetes objects:
 
-```shell
-mkdir -p ./manifests/postgresql/helm/template ./manifests/apps/ ./manifests/scripts
-file1='./manifests/scripts/create-deployment-files.sh' && \
-[[ ! -f "${file}" ]] && touch "${file}" || echo "The file: ${file} already exists"
-```
-
-Add the following contents to the `./manifests/scripts/create-deployment-files.sh` file you just create. This will create blank files for you, check file if they already exists:
-
+- In the `./manifests/postgresql/helm/generate-template.sh` file, modify the following line:
 
 ```shell
-#!/bin/bash
+export DESIRED_NAMESPACE='demo-swf-app-test' # line 16
 
-#!/bin/bash
-
-# Array of file paths
-declare -A files=(
-    [file1]='../manifests/postgresql/helm/generate-template.sh'
-    [file2]='../postgresql/helm/values.yaml'
-    [file3]='../postgresql/helm/template/postgresql-template.yaml'
-    [file4]='../postgresql/helm/template/namespace.yaml'
-    [file5]='../postgresql/helm/template/deployment.yaml'
-)
-
-# Function to create file if it doesn't exist
-create_file_if_not_exist() {
-    local file_path="$1"
-    if [ ! -f "$file_path" ]; then
-        touch "$file_path"
-        echo "Created: $file_path"
-    else
-        echo "Skipped (File already exists): $file_path"
-    fi
-}
-
-# Loop through the array and create files
-for key in "${!files[@]}"; do
-    create_file_if_not_exist "${files[$key]}"
-done
-
+# change test to your app name
 ```
 
-Execute the script to create the files:
+- Copy the following contents into the `./manifests/postgresql/helm/values.yaml` 
+
+```yaml
+global:
+  postgresql:
+    auth:
+      postgresPassword: "postgres"
+      username: "postgres"
+      password: "postgres"
+      database: "postgres"
+
+primary:
+  persistence:
+    enabled: true
+
+  initdb:
+    scripts:
+      init.sql: |
+        CREATE SCHEMA IF NOT EXISTS soldier;
+        CREATE TABLE IF NOT EXISTS soldier (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255),
+          rank VARCHAR(255)
+        );
+    user: postgres
+    password: postgres
+
+volumePermissions:
+  enabled: true
+```
+Run the `generate-manifest.sh` script to create manifest files for postgres:
 
 ```shell
-chmod +x ./manifests/scripts/create-deployment-files.sh \
-./manifests/scripts/create-deployment-files.sh
+./generate-manifest.sh
+```
+Now, check to see if the manifest was generated in `./postgresql/helm/template/postgresql-template.yaml`
+
+Add the following contents to the `./manifests/apps/namespace.yaml` file:
+
+`Note`: change test to your app name.
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-swf-app-test
 ```
 
-`generate-manifest.sh`
+Both the postgres deployment, and our app deployment will be in the same namespace. Apply the `namespace.yaml` manifest to the cluster to create our namespace:
 
 ```shell
-#!/bin/bash
-
-set -euo pipefail
-
-RED=$(tput setaf 1)
-GREEN=$(tput setaf 2)
-NC=$(tput sgr0)
-
-# ERROR PRINTING FUNCTION
-exit_with_error() {
-  printf "%sError: %s%s\n" "$RED" "$1" "$NC" >&2
-  exit 1
-}
-
-# ONLY MODIFY THESE VARIABLES
-export DESIRED_NAMESPACE='demo-swf-app-test'
-export APP_NAME='postgresql'
-export HELM_TEMPLATE_VERSION='15.1.4'
-export HELM_REPO_FOLDER="bitnami"
-export HELM_REPO="https://charts.bitnami.com/bitnami"
-
-# STATIC VARIABLES
-export FOLDER_NAME="$APP_NAME"
-export HELM_TEMPLATE_NAME="$APP_NAME"
-export HELM_TEMPLATE_FILE_NAME="template/${APP_NAME}-template.yaml"
-export HELM_VALUES_FILE_NAME="values.yaml"
-
-# INPUT CHECKING
-[[ -n "${APP_NAME}" ]] || exit_with_error "APP_NAME is not set"
-[[ -n "${HELM_TEMPLATE_NAME}" ]] || exit_with_error "HELM_TEMPLATE_NAME is not set"
-[[ -n "${HELM_TEMPLATE_VERSION}" ]] || exit_with_error "HELM_TEMPLATE_VERSION is not set"
-[[ -n "${HELM_VALUES_FILE_NAME}" ]] || exit_with_error "HELM_VALUES_FILE_NAME is not set"
-[[ "${HELM_REPO}" =~ ^https:// ]] || exit_with_error "Invalid HELM_REPO URL. It must start with 'https://'."
-[[ -n "${HELM_REPO_FOLDER}" ]] || exit_with_error "Helm repository folder is not specified (empty)."
-
-# CHECKING IF HELM REPO EXISTS LOCALLY
-[[ $(helm repo list | grep -c "${HELM_REPO_FOLDER}") -gt 0 ]] && {
-  printf "${GREEN}Adding Helm Repo...\n"
-  printf "Skipping: ${NC}The ${HELM_REPO_FOLDER} ${APP_NAME} helm repository already exists...\n"
-} || {
-  helm repo add "${HELM_REPO_FOLDER}" "${HELM_REPO}" && helm repo update || \
-  exit_with_error "Failed to add or update Helm repository"
-}
-
-# GENERATE HELM TEMPLATE
-helm template "${HELM_TEMPLATE_NAME}" "${HELM_REPO_FOLDER}/${HELM_TEMPLATE_NAME}" \
-  --version "${HELM_TEMPLATE_VERSION}" \
-  --values values.yaml \
-  --namespace "${DESIRED_NAMESPACE}" \
-  > "${HELM_TEMPLATE_FILE_NAME}" || exit_with_error "Failed to generate Helm template"
-
-# SUCCESS MESSAGE
-printf "${GREEN}SUCCESS!${NC} The new ${APP_NAME} helm template is located at: ${GREEN} ${APP_NAME}/helm/${HELM_TEMPLATE_FILE_NAME}${NC}"
+kubectl apply -f ./manifests/apps/namespace.yaml
 ```
 
-
-Open the following files, and replace `` with your namespace (name it the same as your app name):
+Apply the postgres deployment to the cluster:
 
 ```shell
-./postgresql/namespace.yaml
-./postgresql/pvc.yaml
+kubectl apply -f ./postgresql/helm/templates/postgresql-template.yaml
 
-# Note: PVC is not namespaced, and does not requiure a ns
+# verify the pods initialize (may take about a minute)
+kubectl get pods 
 ```
 
-Apply the three manifests located in the `postgresql` directory:
-
-```
-kubectl apply -f ./postgresql/namespace.yaml
-kubectl apply -f ./postgresql/pv.yaml
-kubectl apply -f ./postgresql/pvc.yaml
-```
+Once initialized, login to the database and verify the `soldier` table was created:
 
 ```shell
-k exec -it postgresql-0 -n demo-swf-app-josh -- psql -U postgres
+kubectl -n <your-app-namespace> exec -it postgres-0 -- psql
+
+# run a sql query
+select * from soldier; # this should display three colummns: id, name, rank. Exit when finished.
 ```
 
-Run the following to generate a set of kubernetes manifests for postgres:
+#### Deploy the Application:
+
+Add the following contents to `./manifests/apps/deployment.yaml`
+
+`Note`: change all test to your app name:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demo-swf-app-test
+  name: demo-swf-app-test
+  namespace: demo-swf-app-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: demo-swf-app-test
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: demo-swf-app-test
+    spec:
+      containers:
+      - image: joshkor40/demo-swf-app-test:latest
+        name: demo-swf-app-test
+        env:
+          - name: API_BASE_URL
+            value: "http://demo-swf-app-test.demo-swf-test.svc.cluster.local:8080/api/soldier"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: demo-swf-app-test
+  name: demo-swf-app-test-service
+  namespace: demo-swf-app-test
+spec:
+  ports:
+  - name: cluster-ip-port
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: demo-swf-app-test
+  type: ClusterIP
+```
+
+Apply the manifest to the cluster:
 
 ```shell
-./postgresql/helm/generate.sh
+kubectl apply -f ./manifests/apps/deployment.yaml
 ```
 
-Apply the manifest and verify the `postgresql-0` pod is running after a minute or so:
+Port forward the application to verify functionalilty:
 
 ```shell
-kubectl apply -f postgresql/helm/template/postgresql-template.yaml
+kubectl get svc -n <yournamespace>
+
+# take note of the app service name
+
+kubectl -n <yournamespace> port-forward svc/<yourservicename> 8080:8080
 ```
+
+Navigate to localhost:8080 to verify the app is running correctly. If so, you have successfully built and app, containerized it, and deployed it to kubernetes cluster!
