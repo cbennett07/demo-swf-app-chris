@@ -4,29 +4,15 @@
 
 ### `Part I - Git Repository Setup`
 
-- Create a repo in Gitlab named `demo-swf-app-<add-your-name>` and clone it down locally:
+- Create a repo in Gitlab named `demo-swf-app-<your-name>` and clone it down locally. Change directory to the root of the project:
 
 <p align="center">
   <img src="img/img-001.png" width="100%" title="hover text">
 </p>
 
 <p align="center">
-  <img src="img/img-002.png" width="100%" title="hover text">
-</p>
-
-<p align="center">
-  <img src="img/img-003.png" width="100%" title="hover text">
-</p>
-
-<p align="center">
   <img src="img/img-004.png" width="100%" title="hover text">
 </p>
-
-Change directory to the root of the project:
-
-```shell
-cd demo-swf-app-<your-name>
-```
 
 ### `Part II - Springboot Backend Setup`
 
@@ -59,34 +45,49 @@ Bootstrap a SpringBoot Project:
 </p>
 
 
-### Database Steup
+### `Database Setup`
 
 Configure Postgres:
 
 - Install:
+
+https://formulae.brew.sh/formula/postgresql@16
 ```shell
-brew install postrgresql
-
-or
-
-sudo apt install postgresql
+brew install postgresql@16
 ```
 
-- Connect to the database:
+- Verify connectivity to the local database. Connect to the database:
 
 ```shell
+# if using mac
+psql postgres
+
+# if using linux
 sudo -u postgres psql
 ```
-
-- Set a default password, and create the table used for the project called `soldier` and primary key of `id`, and two columns in the table called `name`, and `rank`: This will be used later to insert, and delete soldier information from a simple table.
+Run the following SQL commands to do the following:
+- Create a user and set a default password
+- Give the user admin privileges.
+- Create the table used for the project called `soldier` and and column with the primary key of `id`, and two columns in the table called `name`, and `rank`: This will be used later to insert, and delete soldier information from a simple table:
 
 ```sql
-ALTER USER postgres WITH PASSWORD 'postgres';
-
-CREATE TABLE soldier( id SERIAL PRIMARY KEY, name VARCHAR(30), rank VARCHAR(30) );
+CREATE USER postgres WITH PASSWORD 'postgres';
+ALTER USER postgres WITH SUPERUSER; 
+CREATE TABLE soldier( id SERIAL PRIMARY KEY, name VARCHAR(30), rank VARCHAR(30));
 ```
 
-- Now, run our Spring Boot app using the `./gradlew bootRun` command, and connect to the database (it should fail) because we have not setup the proper connection in `src/main/resources/application.properties`:
+<p align="center">
+  <img src="img/img-002.png" width="100%" title="hover text">
+</p>
+
+
+Exit the database:
+
+```shell
+exit
+```
+
+- Now, run our Spring Boot app using the `./gradlew bootRun` command, and connect to the database (`it should fail`) because we have not setup the proper connection in `src/main/resources/application.properties`:
 
 ```shell
 # set permissions if needed
@@ -95,9 +96,20 @@ chmod +x gradlew
 ./gradlew bootRun
 ```
 
-- Next, open the `application.properties` file, and append the following key-value pairs to the existging configuration (`do not delete the first line in the file that already exists`):
+Build failed is expected!
+
+<p align="center">
+  <img src="img/img-003.png" width="100%" title="hover text">
+</p>
+
+In vscode, locate the following file: src/main/resources/application.properties:
+
+- Next, open the `application.properties` file, and overwrite the following key-value pairs to the existing configuration:
+
+`Note`: your application name will be different!
 
 ```json
+spring.application.name=demo-swf-app-test
 spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
 spring.datasource.username=postgres
 spring.datasource.password=postgres
@@ -106,12 +118,23 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.hibernate.ddl-auto=update
 ```
 
-- Now, we are going to convert that file to yml, to match how we reference this file in our actual environment (they are interchangable):
+Take a look at this file, and study the values that are set here.
+
+- Now, we are going to create `two` new `.`yaml` files, one to connect to our local postgres database, and one to connect to our database that will run in a kubernetes cluster. These two yaml files, perform the same function as the application.properties file, so we will now delete that file and create two new files:
+
+```
+- application-prod.yaml         
+- application-local.yaml
+```
+
+Note the naming convention of the files (prod, local). A feature we are going to implement called `SPRING_PROFILES` will recognize the file it needs to reference, based on the corresponding environment we are using (prod or local). We will see more on that in a later section.
+
+- Local database connection:
 
 ```yaml
 spring:
   application:
-    name: demo-swf-app-joshua
+    name: demo-swf-app-test
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
@@ -125,51 +148,52 @@ spring:
       ddl-auto: update
 ```
 
-- Next, lets add the postgres dependencies to our `build.gradle` file located in the root directory:
+- Kubernetes postgres database connection:
 
-- Before:
-
-```shell
-plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.2.4'
-	id 'io.spring.dependency-management' version '1.1.4'
-}
-
-group = 'demo-swf-app-joshua'
-version = '0.0.1-SNAPSHOT'
-
-java {
-	sourceCompatibility = '17'
-}
-
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-}
-
-repositories {
-	mavenCentral()
-}
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
-}
+```yaml
+spring:
+  application:
+    name: demo-swf-app-test
+  datasource:
+    url: jdbc:postgresql://postgresql.demo-swf-app-test:5432/postgres
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
 ```
 
-- Swap out the dependencies in the above `build.gradle` file with this updated list:
+- Next, lets modify our `build.gradle` file located in the root directory to do the following:
+
+```
+- Adding Correct Dependencies
+- Adding Spring Profiles
+- Adding Build Tasks (Steps in the correct order)
+```
+
+Modify the `build.gradle` file (copy the contents into your `build.gradle` file):
+
+Note: change the `group` to your group:
 
 ```json
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.4'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'demoswfapptest'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
@@ -179,9 +203,74 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
+
+// Task to install frontend dependencies
+task installFrontend(type: Exec) {
+    inputs.file(file("./frontend/package-lock.json"))
+    inputs.file(file("./frontend/package.json"))
+    commandLine("npm", "install", "--prefix", "frontend")
+    doLast {
+        println("We Install")
+    }
+}
+
+// Task to build frontend
+task buildFrontend(type: Exec) {
+    dependsOn("installFrontend")
+    inputs.dir(file("frontend"))
+    outputs.dir(file("frontend/build"))
+    commandLine("npm", "run", "build", "--prefix", "frontend")
+    doLast {
+        println("We built")
+    }
+}
+
+task copyFrontend(type: Sync) {
+    dependsOn("buildFrontend")
+    from(file("./frontend/build"))
+    into(file("$buildDir/resources/main/static"))
+    doLast {
+        println("copied built frontend to static resources")
+    }
+}
+
+tasks.resolveMainClassName {
+    dependsOn tasks.copyFrontend
+}
+
+jar {
+    dependsOn copyFrontend
+}
+
+// Define cleanFrontend task
+task cleanFrontend(type: Delete) {
+    delete(file("./frontend/build"))
+    delete(file("./src/main/resources/static"))
+}
+
+bootRun {
+    systemProperty "spring.profiles.active", "local" // Set the active profile here
+}
+
+
+// Make clean depend on cleanFrontend
+clean.dependsOn cleanFrontend
+
+// Explicitly declare resolveMainClassName depends on copyFrontend
+tasks.resolveMainClassName.dependsOn copyFrontend
+
+// Explicitly declare compileTestJava depends on copyFrontend
+tasks.compileTestJava.dependsOn copyFrontend
+
+
+bootRun {
+    systemProperty "spring.profiles.active", "local" // Set the active profile here
+}
 ```
 
-- Let us now check to see if the backend springboot application can connect properly to the postgres database:
+Verify the application  boots and connects to the database:
+
+- Check to see if the backend `springboot` application can connect properly to the `postgres` database:
 
 ```shell
 ./gradlew bootRun
@@ -193,14 +282,16 @@ dependencies {
   <img src="img/img-009.png" width="100%" title="hover text">
 </p>
 
-### Frontend Setup
+### `Frontend Setup`
 
 To bootstrap a frontend, we will use React.
 
 - Bootstrap a react project:
 
+While in the root folder of your project, run the following command. Notice, it will create a new folder called `frontend` containing your frontend project files:
+
 ```shell
-npx create-creact-app frontend
+npx create-create-app frontend
 ```
 
 <p align="center">
@@ -254,10 +345,10 @@ In each folder, create the following files:
 Add the following code to the `SoldierController.java` file, but replace my name in the package name with your name on all occurences:
 
 ```java
-package demoswfappjosh.demoswfappjosh.controller;
+package demoswfapptest.demoswfapptest.controller;
 
-import demoswfappjosh.demoswfappjosh.model.Soldier;
-import demoswfappjosh.demoswfappjosh.repository.SoldierRepository;
+import demoswfapptest.demoswfapptest.model.Soldier;
+import demoswfapptest.demoswfapptest.repository.SoldierRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -356,7 +447,7 @@ DELETE for deleting resources (deleteSelectedSoldiers)
 Add the following code to the model `Soldier.java`, but replace my name in the package name with your name on all occurences:
 
 ```java
-package demoswfappjosh.demoswfappjosh.model;
+package demoswfapptest.demoswfapptest.model;
 import lombok.*;
 
 import java.io.Serializable;
@@ -384,7 +475,7 @@ public class Soldier implements Serializable{
 }
 ```
 
-The `Soldier entity class` above is an entity that represents a row that will be inserted, listed, or deleted from our database. Here are a few items in the Soldier entity to be aware of:
+The `Soldier entity class` above is an java entity that represents a row that will be inserted, listed, or deleted from our database. Here are a few items in the Soldier entity to be aware of:
 
 - `Table Name:` soldier (table that will be queried)
 - `Entity Name:` Soldier (name of our entity)
@@ -403,7 +494,7 @@ Uses the dependencies:
 Add the following code to the model `SoldierRepository.java`, but replace my name in the package name with your name on all occurences:
 
 ```java
-package demoswfappjoshua.demoswfappjoshua.repository;
+package demoswfapptest.demoswfapptest.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -429,7 +520,7 @@ Manually enter a row into the soldier table:
 ```shell
 
 # login to pg
-sudo -u postgres psql
+psql postgres
 
 \c postgres # make sure we are connected to the right db
 
@@ -451,12 +542,16 @@ Navigate to:
 ```
 localhost:8080/api/soldier/list (you should see a list of rows)
 
+[{"id":1,"name":"your-name","rank":"your-rank"}]
+
 localhost:8080/api/soldier/home (you should see a simple message)
+
+Demo CRUD App Deployment Class for Cohort 7
 ```
 
 ### Frontend
 
-Replace the content of the following files:
+To set up the frontend, were  going to replace some of the boilerplate code, with our own. Replace the content of the following files:
 
 `frontend/src/App.js`
 
@@ -464,6 +559,15 @@ Replace the content of the following files:
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
+import LogoImage from './download.jpg';
+
+const baseUrl = process.env.API_BASE_URL || 'http://localhost:8080/api/soldier';
+
+const Logo = () => (
+  <div className="LogoContainer">
+    <img src={LogoImage} alt="Logo" className="LogoImage" />
+  </div>
+);
 
 const App = () => {
   const [soldiers, setSoldiers] = useState([]);
@@ -484,7 +588,7 @@ const App = () => {
 
   const fetchSoldiers = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/soldier/list');
+      const response = await axios.get(`${baseUrl}/list`);
       setSoldiers(response.data);
       setShowTable(true);
     } catch (error) {
@@ -500,7 +604,7 @@ const App = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:8080/api/soldier/post', { name, rank });
+      const response = await axios.post(`${baseUrl}/post`, { name, rank });
       console.log('Data submitted:', response.data);
       fetchSoldiers(); // Refresh soldiers after submission
       setName('');
@@ -525,7 +629,7 @@ const App = () => {
 
   const handleDeleteSelected = async () => {
     try {
-      const response = await axios.delete('http://localhost:8080/api/soldier/delete', {
+      const response = await axios.delete(`${baseUrl}/delete`, {
         data: selectedSoldiers // Send selected IDs as the request body
       });
       console.log('Delete response:', response.data);
@@ -539,6 +643,8 @@ const App = () => {
   return (
     <div className="App">
       <div className="App-body">
+        {/* Logo Component */}
+        <Logo />
         <div className="FormContainer">
           <h2>Add Soldier</h2>
           <form onSubmit={handleSubmit} className="SoldierForm">
@@ -613,17 +719,21 @@ export default App;
 
 The above `React` application (`App.js`) is a simple soldier management system:
 
-- Users can input a Soldier's name and rank into the form.
-Upon submission, the Soldier is added to the system via a POST request to http://localhost:8080/api/soldier/post.
+The application utilizes an `or` statement to either connect to localhost:8080/api/soldier, or an environment variable called API_BASE_URL, which gets mounted inside a docker container at runtime. If that environment variable does not exist, it will connect to localhost. Spring profiles active will determine what environment to run. More on how this gets set in the container later.
 
-- Upon mounting, the component fetches the list of soldiers from the backend API (http://localhost:8080/api/soldier/list). The list of soldiers is displayed in a table format.
+The frontend App.js consists of components that allow:
 
-- Users can select Soldiers by checking the checkboxes in the table rows (selectedSoldiers state). Users can select one or more Soldiers by checking the checkboxes. Clicking the "Delete Selected" button triggers a DELETE request to http://localhost:8080/api/soldier/delete, sending the IDs of selected Soldiers to be deleted.
+- Users to input a Soldier's name and rank into the form.
+Upon submission, the Soldier java object is added to the system via a POST request to http://localhost:8080/api/soldier/post. (if using local spring profile)
+
+- Upon mounting, the component fetches the list of soldiers from the backend API (http://localhost:8080/api/soldier/list).(if using local spring profile) The list of soldiers is displayed in a table format.
+
+- Users can select Soldiers by checking the checkboxes in the table rows (selectedSoldiers state). Users can select one or more Soldiers by checking the checkboxes. Clicking the "Delete Selected" button triggers a POST request to http://localhost:8080/api/soldier/delete, (if using local spring profile) sending the IDs of selected Soldiers to be deleted. This will delete the java objects from the database.
 
 
-Replace the content of the following files:
+Styling the page: Replace the content of the following files:
 
-`frontend/src/App.js`
+`frontend/src/App.js` Do not focus on this, its just to make the app pretty.
 
 ```css
 body {
@@ -633,7 +743,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #101a2b; /* Dark background similar to GitHub's dark mode */
+  background-color: #000000; /* Dark background similar to GitHub's dark mode */
   color: #c9d1d9; /* Text color */
 }
 
@@ -648,21 +758,21 @@ body {
 }
 
 .App-header {
-  background-color: #161b22; /* Dark header background */
+  background-color: #000000; /* Dark header background */
   min-height: 15vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: #58a6ff; /* Header text color */
+  color: #bdb000; /* Header text color */
   width: 100%;
 }
 
 .App-logo {
   height: 20vmin;
   pointer-events: none;
-  border: 1px solid #30363d; /* Same border as input fields */
+  border: 1px solid #30363d;
 }
 
 .App-body {
@@ -687,13 +797,13 @@ body {
 
 .FormInput {
   width: 100%;
-  padding: 10px; /* Add padding to the text boxes */
+  padding: 10px; 
   font-size: 16px;
-  border: 1px solid #30363d; /* Dark border color */
+  border: 1px solid #30363d; 
   border-radius: 4px;
   box-sizing: border-box;
-  background-color: #0d1117; /* Dark input background */
-  color: #c9d1d9; /* Input text color */
+  background-color: #0d1117; 
+  color: #ccc900; 
 }
 
 .FormButton {
@@ -701,7 +811,7 @@ body {
   margin-top: 10px;
   padding: 10px;
   font-size: 16px;
-  background-color: #07305f; /* GitHub's blue color */
+  background-color: #252525; 
   color: white;
   border: none;
   border-radius: 4px;
@@ -709,7 +819,7 @@ body {
 }
 
 .FormButton:hover {
-  background-color: #073c75;
+  background-color: #beb200;
 }
 
 .TableContainer {
@@ -725,19 +835,21 @@ body {
 
 .SoldierTable th,
 .SoldierTable td {
-  border: 1px solid #30363d; /* Dark border color */
+  border: 1px solid #30363d;
   padding: 8px;
-  text-align: center; /* Center-align text in table cells */
-  border-radius: 8px; /* Rounded corners */
+  text-align: center; 
+  border-radius: 8px; 
+  width: 2in; 
 }
 
 .SoldierTable th {
-  background-color: #3371c7; /* Dark header background */
-  color: #c9d1d9; /* Header text color */
+  background-color: #181818; 
+  color: #c9d1d9; 
 }
 
+
 .deleteButton {
-  background-color: #d73a49; /* GitHub's delete button red color */
+  background-color: #b3a100; 
   color: white;
   padding: 8px 16px;
   border: none;
@@ -747,22 +859,21 @@ body {
 }
 
 .deleteButton:disabled {
-  background-color: #30363d; /* Dark disabled button color */
-  color: #6a737d; /* Disabled button text color */
+  background-color: #30363d; 
+  color: #6a737d; 
 }
 
-@media (max-width: 768px) {
-  .App-header {
-    min-height: 10vh;
-  }
-  
-  .App-logo {
-    height: 20vmin;
-  }
+.LogoContainer {
+  text-align: center; 
+}
+
+.LogoImage {
+  width: 100px; 
+  height: auto; 
 }
 ```
 
-`Verify the funnctionality of the frontend`
+`Verify the functionality of the frontend`:
 
 ```shell
 cd frontend/
@@ -777,6 +888,17 @@ Axios is used to make asynchronous HTTP requests to the backend API.
 - axios.get is used to fetch the list of soldiers.
 - axios.post is used to add a new Soldier.
 - axios.delete is used to delete selected Soldiers.
+
+
+There is a image called `download.jpg` located in the repo you cloned. Drag it into the following folder (the same folder the App.js is in):
+
+```
+download.jpg
+
+into frontend/src/download.jpg
+```
+
+The app will not compile correctly if this image is not moved. Its simply the Software Factory logo.
 
 ```shell
 npm start
@@ -807,13 +929,13 @@ Let's start by adding new tasks to our gradle build file.
  `Important`: replace the group name, with your group name:
 
  ```java
- plugins {
+plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.4'
     id 'io.spring.dependency-management' version '1.1.4'
 }
 
-group = 'demoswfappjosh'
+group = 'demoswfapptest'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
@@ -831,7 +953,6 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
 
-// Task to install frontend dependencies
 task installFrontend(type: Exec) {
     inputs.file(file("./frontend/package-lock.json"))
     inputs.file(file("./frontend/package.json"))
@@ -841,7 +962,6 @@ task installFrontend(type: Exec) {
     }
 }
 
-// Task to build frontend
 task buildFrontend(type: Exec) {
     dependsOn("installFrontend")
     inputs.dir(file("frontend"))
@@ -851,7 +971,6 @@ task buildFrontend(type: Exec) {
         println("We built")
     }
 }
-
 
 task copyFrontend(type: Sync) {
     dependsOn("buildFrontend")
@@ -870,25 +989,34 @@ jar {
     dependsOn copyFrontend
 }
 
-// Define cleanFrontend task
 task cleanFrontend(type: Delete) {
     delete(file("./frontend/build"))
     delete(file("./src/main/resources/static"))
 }
 
-// Make clean depend on cleanFrontend
+bootRun {
+    systemProperty "spring.profiles.active", "local"
+}
+
 clean.dependsOn cleanFrontend
 
-bootJar.enabled = false
+tasks.resolveMainClassName.dependsOn copyFrontend
+
+tasks.compileTestJava.dependsOn copyFrontend
+
 ```
 
 Run the following command and navigate to localhost:8080 to view the application:
+
+Congratulations, you built a CRUD app, similar to the ones we deploy into our environment. Now we'll containerize it and deploy it on Kubernetes!
 
 ```shell
 ./gradlew build
 ```
 
 ### `Part VI - Containerize the application`
+
+Create a dockerfile with the following contents:
 
 ```Dockerfile
 FROM openjdk:17-jdk-slim AS build
@@ -905,4 +1033,153 @@ WORKDIR /app
 COPY --from=build /app/build/libs/demo-swf-app-josh-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
+```
+
+### Create the Kubernetes Objects
+
+Start a local kubernetes cluster:
+
+```shell
+minikube start
+```
+
+Setup the folder and file structure to generate helm templates and kubernetes objects:
+
+```shell
+mkdir -p ./manifests/postgresql/helm/template ./manifests/apps/ ./manifests/scripts
+file1='./manifests/scripts/create-deployment-files.sh' && \
+[[ ! -f "${file}" ]] && touch "${file}" || echo "The file: ${file} already exists"
+```
+
+Add the following contents to the `./manifests/scripts/create-deployment-files.sh` file you just create. This will create blank files for you, check file if they already exists:
+
+
+```shell
+#!/bin/bash
+
+#!/bin/bash
+
+# Array of file paths
+declare -A files=(
+    [file1]='../manifests/postgresql/helm/generate-template.sh'
+    [file2]='../postgresql/helm/values.yaml'
+    [file3]='../postgresql/helm/template/postgresql-template.yaml'
+    [file4]='../postgresql/helm/template/namespace.yaml'
+    [file5]='../postgresql/helm/template/deployment.yaml'
+)
+
+# Function to create file if it doesn't exist
+create_file_if_not_exist() {
+    local file_path="$1"
+    if [ ! -f "$file_path" ]; then
+        touch "$file_path"
+        echo "Created: $file_path"
+    else
+        echo "Skipped (File already exists): $file_path"
+    fi
+}
+
+# Loop through the array and create files
+for key in "${!files[@]}"; do
+    create_file_if_not_exist "${files[$key]}"
+done
+
+```
+
+Execute the script to create the files:
+
+```shell
+chmod +x ./manifests/scripts/create-deployment-files.sh \
+./manifests/scripts/create-deployment-files.sh
+```
+
+`generate-manifest.sh`
+
+```shell
+#!/bin/bash
+
+set -euo pipefail
+
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+NC=$(tput sgr0)
+
+# ERROR PRINTING FUNCTION
+exit_with_error() {
+  printf "%sError: %s%s\n" "$RED" "$1" "$NC" >&2
+  exit 1
+}
+
+# ONLY MODIFY THESE VARIABLES
+export DESIRED_NAMESPACE='demo-swf-app-test'
+export APP_NAME='postgresql'
+export HELM_TEMPLATE_VERSION='15.1.4'
+export HELM_REPO_FOLDER="bitnami"
+export HELM_REPO="https://charts.bitnami.com/bitnami"
+
+# STATIC VARIABLES
+export FOLDER_NAME="$APP_NAME"
+export HELM_TEMPLATE_NAME="$APP_NAME"
+export HELM_TEMPLATE_FILE_NAME="template/${APP_NAME}-template.yaml"
+export HELM_VALUES_FILE_NAME="values.yaml"
+
+# INPUT CHECKING
+[[ -n "${APP_NAME}" ]] || exit_with_error "APP_NAME is not set"
+[[ -n "${HELM_TEMPLATE_NAME}" ]] || exit_with_error "HELM_TEMPLATE_NAME is not set"
+[[ -n "${HELM_TEMPLATE_VERSION}" ]] || exit_with_error "HELM_TEMPLATE_VERSION is not set"
+[[ -n "${HELM_VALUES_FILE_NAME}" ]] || exit_with_error "HELM_VALUES_FILE_NAME is not set"
+[[ "${HELM_REPO}" =~ ^https:// ]] || exit_with_error "Invalid HELM_REPO URL. It must start with 'https://'."
+[[ -n "${HELM_REPO_FOLDER}" ]] || exit_with_error "Helm repository folder is not specified (empty)."
+
+# CHECKING IF HELM REPO EXISTS LOCALLY
+[[ $(helm repo list | grep -c "${HELM_REPO_FOLDER}") -gt 0 ]] && {
+  printf "${GREEN}Adding Helm Repo...\n"
+  printf "Skipping: ${NC}The ${HELM_REPO_FOLDER} ${APP_NAME} helm repository already exists...\n"
+} || {
+  helm repo add "${HELM_REPO_FOLDER}" "${HELM_REPO}" && helm repo update || \
+  exit_with_error "Failed to add or update Helm repository"
+}
+
+# GENERATE HELM TEMPLATE
+helm template "${HELM_TEMPLATE_NAME}" "${HELM_REPO_FOLDER}/${HELM_TEMPLATE_NAME}" \
+  --version "${HELM_TEMPLATE_VERSION}" \
+  --values values.yaml \
+  --namespace "${DESIRED_NAMESPACE}" \
+  > "${HELM_TEMPLATE_FILE_NAME}" || exit_with_error "Failed to generate Helm template"
+
+# SUCCESS MESSAGE
+printf "${GREEN}SUCCESS!${NC} The new ${APP_NAME} helm template is located at: ${GREEN} ${APP_NAME}/helm/${HELM_TEMPLATE_FILE_NAME}${NC}"
+```
+
+
+Open the following files, and replace `` with your namespace (name it the same as your app name):
+
+```shell
+./postgresql/namespace.yaml
+./postgresql/pvc.yaml
+
+# Note: PVC is not namespaced, and does not requiure a ns
+```
+
+Apply the three manifests located in the `postgresql` directory:
+
+```
+kubectl apply -f ./postgresql/namespace.yaml
+kubectl apply -f ./postgresql/pv.yaml
+kubectl apply -f ./postgresql/pvc.yaml
+```
+
+```shell
+k exec -it postgresql-0 -n demo-swf-app-josh -- psql -U postgres
+```
+Run the following to generate a set of kubernetes manifests for postgres:
+
+```shell
+./postgresql/helm/generate.sh
+```
+
+Apply the manifest and verify the `postgresql-0` pod is running after a minute or so:
+
+```shell
+kubectl apply -f postgresql/helm/template/postgresql-template.yaml
 ```
