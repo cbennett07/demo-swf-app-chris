@@ -165,7 +165,7 @@ spring:
       ddl-auto: update
 ```
 
-- Kubernetes postgres database connection: (change test, to your name)
+- Kubernetes postgres database connection: (`change test, to your name`)
 
 ```yaml
 spring:
@@ -440,13 +440,11 @@ http://localhost:8080/api/soldier/home (you should see a simple message)
 
 Your app is now connected to your database!
 
-
-
 ### `Frontend Setup`
 
 To bootstrap a frontend, we will use `React`.
 
-Install node.js to begin:
+Install `node.js` to begin:
 
 ```shell
 brew install node
@@ -668,7 +666,7 @@ Upon submission, the Soldier java object is added to the system via a POST reque
 
 Styling the page: Replace the content of the following files:
 
-`frontend/src/App.js` Do not focus on this, its just to make the app pretty.
+`frontend/src/App.css` Do not focus on this, its just to make the app pretty.
 
 ```css
 body {
@@ -678,8 +676,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #000000; /* Dark background similar to GitHub's dark mode */
-  color: #c9d1d9; /* Text color */
+  background-color: #000000; 
+  color: #c9d1d9; 
 }
 
 .App {
@@ -693,14 +691,14 @@ body {
 }
 
 .App-header {
-  background-color: #000000; /* Dark header background */
+  background-color: #000000; 
   min-height: 15vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: #bdb000; /* Header text color */
+  color: #bdb000; 
   width: 100%;
 }
 
@@ -950,6 +948,8 @@ Run the following command and navigate to localhost:8080 to view the application
 ./gradlew bootRun
 ```
 
+Navigate to https://localhost:8080 to view your app.
+
 Congratulations, you built a CRUD app, similar to the ones we deploy into our environment. Now we'll containerize it and deploy it on Kubernetes!
 
 ### `Part VI - Containerize the application`
@@ -958,7 +958,11 @@ In this section, we will build a docker image based on the app we built, deploy 
 
 #### Create and Ship the Image:
 
-Create a dockerfile with the following contents: 
+Create a dockerfile with the following contents, and add it to the root folder in your project:
+
+```shell
+touch Dockerfile
+```
 
 `Note`: change my name to your app name in the SNAPSHOT.
 
@@ -974,12 +978,15 @@ RUN ./gradlew build
 # Stage 2: Create the final image
 FROM openjdk:17-jdk-slim
 WORKDIR /app
-COPY --from=build /app/build/libs/demo-swf-app-josh-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/build/libs/demo-swf-app-millett-0.0.1-SNAPSHOT.jar app.jar
+ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
 ```
 
-Before continuing, verify docker desktop is initialized, you have a `dockerhub` account, and that you can login via the CLI:
+Before continuing, verify docker desktop is initialized, you have a `https://hub.docker.com/` account, and that you can login via the CLI:
+
+Note: you may not need sudo in your docker commands depending on your permissions
 
 ```shell
 sudo docker login -u <your-username>
@@ -990,7 +997,7 @@ sudo docker login -u <your-username>
 Build and tag the docker image:
 
 ```shell
-sudo docker build -t <your-docker-username>/demo-swf-app-<yourname>:latest .
+docker build -t <your-docker-username>/demo-swf-app-<yourname>:latest .
 ```
 
 Ship the docker image to `hub.docker.io`:
@@ -1050,11 +1057,11 @@ volumePermissions:
 Run the `generate-manifest.sh` script to create manifest files for postgres:
 
 ```shell
-./generate-manifest.sh
+./postgresql/helm/generate-manifest.sh
 ```
 Now, check to see if the manifest was generated in `./postgresql/helm/template/postgresql-template.yaml`
 
-Add the following contents to the `./manifests/apps/namespace.yaml` file:
+Add the following contents to the `./apps-manifests/namespace.yaml` file:
 
 `Note`: change test to your app name.
 
@@ -1068,22 +1075,26 @@ metadata:
 Both the postgres deployment, and our app deployment will be in the same namespace. Apply the `namespace.yaml` manifest to the cluster to create our namespace:
 
 ```shell
-kubectl apply -f ./manifests/apps/namespace.yaml
+kubectl apply -f ./apps-manifest/namespace.yaml
 ```
 
 Apply the postgres deployment to the cluster:
 
 ```shell
-kubectl apply -f ./postgresql/helm/templates/postgresql-template.yaml
+kubectl apply -f ./postgresql/helm/template/postgresql-template.yaml
+```
 
-# verify the pods initialize (may take about a minute)
-kubectl get pods 
+Verify the pods initialize (`may take about a minute`)
+
+```
+kubectl get pods -n demo-swf-app-<yourappnamespace>
 ```
 
 Once initialized, login to the database and verify the `soldier` table was created:
 
 ```shell
-kubectl -n <your-app-namespace> exec -it postgres-0 -- psql
+k -n demo-swf-app-<yourappnamespace> exec -it postgresql-0 -- psql -U postgres
+# password is postgres 
 
 # run a sql query
 select * from soldier; # this should display three colummns: id, name, rank. Exit when finished.
@@ -1142,17 +1153,37 @@ spec:
 Apply the manifest to the cluster:
 
 ```shell
-kubectl apply -f ./manifests/apps/deployment.yaml
+kubectl apply -f ./app-manifests/deployment.yaml
+```
+
+Verify the app is `Running`:
+
+```
+❯ k get po -n demo-swf-app-millett -w
+NAME                                    READY   STATUS    RESTARTS   AGE
+demo-swf-app-millett-684448f47d-ddtkf   1/1     Running   0          22s
+demo-swf-app-millett-684448f47d-nj49k   1/1     Running   0          22s
+demo-swf-app-millett-684448f47d-pqc9x   1/1     Running   0          22s
+postgresql-0                            1/1     Running   0          27m
 ```
 
 Port forward the application to verify functionality:
 
 ```shell
 kubectl get svc -n <yournamespace>
-
 # take note of the app service name
+```
 
+Forward the service created in the deployment to `localhost:8080`:
+
+```shell
 kubectl -n <yournamespace> port-forward svc/<yourservicename> 8080:8080
 ```
 
 Navigate to localhost:8080 to verify the app is running correctly. If so, you have successfully built and app, containerized it, and deployed it to kubernetes cluster!
+
+<p align="center">
+  <img src="img/img-013.png" width="100%" title="hover text">
+</p>
+
+This concludes our lab!
