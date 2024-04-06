@@ -4,7 +4,7 @@
 
 ### `Part I - Git Repository Setup`
 
-- Create a repo in Gitlab named `demo-swf-app-<your-name>` and clone it down locally. Change directory to the root of the project:
+- Fork the repo in Gitlab named `demo-swf-app-<your-name>` and clone it down locally. Change directory to the root of the project:
 
 <p align="center">
   <img src="img/img-001.png" width="100%" title="hover text">
@@ -38,7 +38,17 @@ Bootstrap a SpringBoot Project:
   <img src="img/img-007.png" width="100%" title="hover text">
 </p>
 
-- The folder structure should look exactly like the image below, with the exception of the name:
+- The folder structure should look like the image below, with the exception of the name:
+- `Update`: there will be a couple of pre-staged files not pictured:
+
+```
+- app-logo/<swf image for the app>
+- img/<images used for readme>
+- app-manifests/<blank kubernetes manifests to add content to later>
+- postgres/<helm files for postgres helm deployment>
+- .dockerignore # used to ignore these files when building a docker container
+```
+
 
 <p align="center">
   <img src="img/img-008.png" width="100%" title="hover text">
@@ -72,7 +82,7 @@ Run the following SQL commands to do the following:
 
 ```sql
 CREATE USER postgres WITH PASSWORD 'postgres';
-ALTER USER postgres WITH SUPERUSER; 
+ALTER USER postgres WITH SUPERUSER;
 CREATE TABLE soldier( id SERIAL PRIMARY KEY, name VARCHAR(30), rank VARCHAR(30));
 ```
 
@@ -106,7 +116,7 @@ In vscode, locate the following file: src/main/resources/application.properties:
 
 - Next, open the `application.properties` file, and overwrite the following key-value pairs to the existing configuration:
 
-`Note`: your application name will be different!
+`Note`: again your application name will be different!
 
 ```json
 spring.application.name=demo-swf-app-test
@@ -179,7 +189,7 @@ Modify the `build.gradle` file (copy the contents into your `build.gradle` file)
 
 Note: change the `group` to your group:
 
-```json
+```
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.4'
@@ -1172,6 +1182,7 @@ kubectl apply -f ./postgresql/pvc.yaml
 ```shell
 k exec -it postgresql-0 -n demo-swf-app-josh -- psql -U postgres
 ```
+
 Run the following to generate a set of kubernetes manifests for postgres:
 
 ```shell
