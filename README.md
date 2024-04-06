@@ -21,6 +21,7 @@ https://web.git.mil/swf/bridge-program/platform-bridge/demo-swf-app-your-name
 Bootstrap a SpringBoot Project:
 
 - Navigate to `start.spring.io` and generate a project with the following settings:
+`Note:` changed my name to your name:
 
 <p align="center">
   <img src="img/img-005.png" width="100%" title="hover text">
@@ -120,7 +121,7 @@ In vscode, locate the following file: src/main/resources/application.properties:
 
 `Note`: again your application name will be different!
 
-```json
+```
 spring.application.name=demo-swf-app-test
 spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
 spring.datasource.username=postgres
@@ -132,14 +133,16 @@ spring.jpa.hibernate.ddl-auto=update
 
 Take a look at this file, and study the values that are set here.
 
-- Now, we are going to create `two` new `.`yaml` files, one to connect to our local postgres database, and one to connect to our database that will run in a kubernetes cluster. These two yaml files, perform the same function as the application.properties file, so we will now delete that file and create two new files:
+- Now, we are going to create `two` new `yaml` files, one to connect to our local postgres database, and one to connect to our database that will run in a kubernetes cluster. These two yaml files, perform the same function as the `application.properties` file, so we will now delete that file and create two new files:
 
 ```
 - application-prod.yaml         
 - application-local.yaml
 ```
 
-Note the naming convention of the files (prod, local). A feature we are going to implement called `SPRING_PROFILES` will recognize the file it needs to reference, based on the corresponding environment we are using (prod or local). We will see more on that in a later section.
+Note the naming convention of the files (`prod`, `local`). 
+
+A feature we are going to implement called `SPRING_PROFILES_ACTIVE` will recognize the file it needs to reference/use, based on the corresponding environment we are using (prod or local). We will see more on that in a later section. For now, create the two files:
 
 - Local database connection:
 
@@ -160,7 +163,7 @@ spring:
       ddl-auto: update
 ```
 
-- Kubernetes postgres database connection:
+- Kubernetes postgres database connection: (change test, to your name)
 
 ```yaml
 spring:
@@ -179,7 +182,7 @@ spring:
       ddl-auto: update
 ```
 
-- Next, lets modify our `build.gradle` file located in the root directory to do the following:
+- Next, we will modify our `build.gradle` file located in the root directory to do the following:
 
 ```
 - Adding Correct Dependencies
@@ -187,7 +190,7 @@ spring:
 - Adding Build Tasks (Steps in the correct order)
 ```
 
-Modify the `build.gradle` file (copy the contents into your `build.gradle` file):
+Modify the `build.gradle` file by over-writing with the following contents: into your `build.gradle` file:
 
 Note: change the `group` to your group:
 
@@ -280,7 +283,7 @@ bootRun {
 }
 ```
 
-Verify the application  boots and connects to the database:
+We will now verify the application boots and connects to the database:
 
 - Check to see if the backend `springboot` application can connect properly to the `postgres` database:
 
@@ -294,9 +297,10 @@ Verify the application  boots and connects to the database:
   <img src="img/img-009.png" width="100%" title="hover text">
 </p>
 
+
 ### `Frontend Setup`
 
-To bootstrap a frontend, we will use React.
+To bootstrap a frontend, we will use `React`.
 
 - Bootstrap a react project:
 
@@ -304,6 +308,7 @@ While in the root folder of your project, run the following command. Notice, it 
 
 ```shell
 npx create-create-app frontend
+# note: you may need to install node to do this
 ```
 
 <p align="center">
@@ -326,17 +331,19 @@ npm run start
 
 - Navigate to `localhost:3000` to verify.
 
-- At this point you've bootstrapped a react frontend, a springboot backend, and a postgres database:
+- At this point you've bootstrapped a react frontend, a spring boot backend, and a postgres database. Let's now make an application!
 
 ### Creating a Functioning Application to Containerize
 
-`Disclaimer:` The purpose of this class is `containerization` and `familiarizing` with the structure of Software factory applications, and how the differant components (`frontend, backend, database`) interact with one-another. At times, troubleshooting outages relies on understanding how application connections work.
+`Disclaimer:` The purpose of this class is `containerization` and `familiarizing` with the structure of Software factory applications, and how the different components (`frontend, backend, database`) interact with one-another. At times, troubleshooting outages relies on understanding how application connections work.
 
-At this time, we will briefly describe, then copy and paste code into each file, to demostrate how it works, but we will not be deep diving into how to program in java or react!
+At this time, we will briefly describe, then copy and paste code into each file, to demonstrate how it works, but we will not be deep diving into how to program in java or react!
 
 ####  Backend setup
 
 In the `src/main/java/demoswfappjoshua/demoswfappjoshua` folder, create three directories:
+
+Note: you path will be named based on the name you used to bootstrap your spring boot application. Let us now create the folder and file structure:
 
 ```
 - controller
@@ -354,7 +361,7 @@ In each folder, create the following files:
 
 #### Create the `SoldierController.java`
 
-Add the following code to the `SoldierController.java` file, but replace my name in the package name with your name on all occurences:
+Add the following code to the `SoldierController.java` file, but `replace test` in the package name and imports with `your name` on all occurrences:
 
 ```java
 package demoswfapptest.demoswfapptest.controller;
@@ -402,7 +409,7 @@ public class SoldierController {
 }
 ```
 
-- The `SoldierController class` is a part of a Spring Boot application, designed to handle `HTTP requests` related to Soldier entities. The `SoldierController class` utilizes the SoldierRepository for database operations. It follows `RESTful` conventions for `CRUD` operations:
+- The above `SoldierController class` is a part of a Spring Boot application, designed to handle `HTTP requests` related to Soldier entities. The `SoldierController class` utilizes the `SoldierRepository` for database operations. It follows `RESTful` conventions for `CRUD` operations:
 
 ```
 POST for creating new resources (insertSoldier)
@@ -454,9 +461,9 @@ DELETE for deleting resources (deleteSelectedSoldiers)
 [1, 2, 3]
 ```
 
-#### `Solder.java`:
+#### Create the `Solder.java` file:
 
-Add the following code to the model `Soldier.java`, but replace my name in the package name with your name on all occurences:
+Add the following code to the model `Soldier.java`, but replace test in the package name with your name on all occurrences:
 
 ```java
 package demoswfapptest.demoswfapptest.model;
@@ -501,7 +508,7 @@ Uses the dependencies:
 - `Lombok:` A library to reduce boilerplate code in Java classes, used here for generating constructors and getter/setter methods.
 
 
-#### `SolderRepository.java`:
+#### Create the `SolderRepository.java` file:
 
 Add the following code to the model `SoldierRepository.java`, but replace my name in the package name with your name on all occurences:
 
@@ -518,16 +525,16 @@ public interface SoldierRepository extends JpaRepository<Soldier, Long> {
 }
 ```
 
-The `SoldierRepository interface` is a part of a Spring Boot application, serving as a repository for the Soldier entity. `Handles database operations` for the Soldier entity. By extending JpaRepository<Soldier, Long>, the SoldierRepository gains access to methods like `save`, `findById`, `findAll`, `deleteById`, `etc.`, without needing to implement these methods manually.
+- The `SoldierRepository interface` is a part of a Spring Boot application, serving as a repository for the Soldier entity. `Handles database operations` for the Soldier entity. By extending JpaRepository<Soldier, Long>, the SoldierRepository gains access to methods like `save`, `findById`, `findAll`, `deleteById`, `etc.`, without needing to implement these methods manually.
 
-`Spring Data JPA`: Provides an easy and efficient way to interact with the database without writing boilerplate code.
+- `Spring Data JPA`: Provides an easy and efficient way to interact with the database without writing boilerplate code.
 Spring Framework: Provides a powerful framework for building Java-based applications.
 
-The `SoldierRepository interface` can be used to perform CRUD operations on the Soldier entity.
+- The `SoldierRepository interface` can be used to perform CRUD operations on the Soldier entity.
 
 At this time, your backend code should be setup! Let us test it to see if it works:
 
-Manually enter a row into the soldier table:
+Next, let us `manually` enter a row into the soldier table:
 
 ```shell
 
@@ -552,18 +559,20 @@ Now, run the backend application to verify that the backend queries the database
 Navigate to:
 
 ```
-localhost:8080/api/soldier/list (you should see a list of rows)
+http://localhost:8080/api/soldier/list (you should see a list of rows)
 
-[{"id":1,"name":"your-name","rank":"your-rank"}]
+  # you should see: [{"id":1,"name":"your-name","rank":"your-rank"}]
 
-localhost:8080/api/soldier/home (you should see a simple message)
+http://localhost:8080/api/soldier/home (you should see a simple message)
 
-Demo CRUD App Deployment Class for Cohort 7
+  # you should see: Demo CRUD App Deployment Class for Cohort 7
 ```
+
+Your app is now connected to your database!
 
 ### Frontend
 
-To set up the frontend, were  going to replace some of the boilerplate code, with our own. Replace the content of the following files:
+To set up the frontend, were going to replace some of the boilerplate code we generated earlier, with our own. Replace the content of the following files:
 
 `frontend/src/App.js`
 
@@ -731,17 +740,16 @@ export default App;
 
 The above `React` application (`App.js`) is a simple soldier management system:
 
-The application utilizes an `or` statement to either connect to localhost:8080/api/soldier, or an environment variable called API_BASE_URL, which gets mounted inside a docker container at runtime. If that environment variable does not exist, it will connect to localhost. Spring profiles active will determine what environment to run. More on how this gets set in the container later.
+- The application utilizes an `or` statement to either connect to `localhost:8080/api/soldier`, or an environment variable called `API_BASE_URL`, which gets mounted inside a `docker` container at runtime. If that environment variable does not exist, it will connect to localhost. Spring profiles active will determine what environment to run based on this condition. More on how this gets set in the container later.
 
-The frontend App.js consists of components that allow:
+The frontend `App.js` consists of components that allow:
 
 - Users to input a Soldier's name and rank into the form.
 Upon submission, the Soldier java object is added to the system via a POST request to http://localhost:8080/api/soldier/post. (if using local spring profile)
 
-- Upon mounting, the component fetches the list of soldiers from the backend API (http://localhost:8080/api/soldier/list).(if using local spring profile) The list of soldiers is displayed in a table format.
+- Upon mounting, the component fetches the list of soldiers from the backend API (`http://localhost:8080/api/soldier/list`) (if using local spring profile). The list of soldiers is displayed in a table format.
 
 - Users can select Soldiers by checking the checkboxes in the table rows (selectedSoldiers state). Users can select one or more Soldiers by checking the checkboxes. Clicking the "Delete Selected" button triggers a POST request to http://localhost:8080/api/soldier/delete, (if using local spring profile) sending the IDs of selected Soldiers to be deleted. This will delete the java objects from the database.
-
 
 Styling the page: Replace the content of the following files:
 
@@ -902,15 +910,15 @@ Axios is used to make asynchronous HTTP requests to the backend API.
 - axios.delete is used to delete selected Soldiers.
 
 
-There is a image called `download.jpg` located in the repo you cloned. Drag it into the following folder (the same folder the App.js is in):
+There is a image called `download.jpg` located in the app-logo/download.jpg folder: Drag it into the following folder (the same folder the App.js is in):
 
 ```
-download.jpg
-
-into frontend/src/download.jpg
+app-logo/download.jpg > frontend/src/download.jpg
 ```
 
 The app will not compile correctly if this image is not moved. Its simply the Software Factory logo.
+
+Let us now run the application frontend to verify it works correctly:
 
 ```shell
 npm start
@@ -922,13 +930,15 @@ npm start
 http://localhost:3000/
 ```
 
+`Update`: added more css and logo (image is slightly different)
+
 <p align="center">
   <img src="img/img-012.png" width="100%" title="hover text">
 </p>
 
 ### Connect the Front and Backends
 
-Let's start by adding new tasks to our gradle build file.
+Now we will connect the front and backends. Let's start by adding new tasks to our gradle build file.
 
  These tasks will:
  - install any dependencies need for the frontend
@@ -1020,11 +1030,12 @@ tasks.compileTestJava.dependsOn copyFrontend
 
 Run the following command and navigate to localhost:8080 to view the application:
 
-Congratulations, you built a CRUD app, similar to the ones we deploy into our environment. Now we'll containerize it and deploy it on Kubernetes!
 
 ```shell
-./gradlew build
+./gradlew bootRun
 ```
+
+Congratulations, you built a CRUD app, similar to the ones we deploy into our environment. Now we'll containerize it and deploy it on Kubernetes!
 
 ### `Part VI - Containerize the application`
 
