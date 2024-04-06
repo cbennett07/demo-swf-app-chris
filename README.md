@@ -135,6 +135,8 @@ Take a look at this file, and study the values that are set here.
 
 - Now, we are going to create `two` new `yaml` files, one to connect to our local postgres database, and one to connect to our database that will run in a kubernetes cluster. These two yaml files, perform the same function as the `application.properties` file, so we will now delete that file and create two new files:
 
+Create these files in the exact same folder that the `application.properties` file is in.
+
 ```
 - application-prod.yaml         
 - application-local.yaml
@@ -182,102 +184,9 @@ spring:
       ddl-auto: update
 ```
 
-- Next, we will modify our `build.gradle` file located in the root directory to do the following:
+- Next, we will modify our `build.gradle` file located in the root directory. Add the following code block to the end of your `build.gradle` file to build using the spring profile 'local'.
 
 ```
-- Adding Correct Dependencies
-- Adding Spring Profiles
-- Adding Build Tasks (Steps in the correct order)
-```
-
-Modify the `build.gradle` file by over-writing with the following contents: into your `build.gradle` file:
-
-Note: change the `group` to your group:
-
-```
-plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.2.4'
-    id 'io.spring.dependency-management' version '1.1.4'
-}
-
-group = 'demoswfapptest'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    compileOnly 'org.projectlombok:lombok:1.18.22'
-    annotationProcessor 'org.projectlombok:lombok:1.18.22'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtimeOnly 'org.postgresql:postgresql'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-}
-
-// Task to install frontend dependencies
-task installFrontend(type: Exec) {
-    inputs.file(file("./frontend/package-lock.json"))
-    inputs.file(file("./frontend/package.json"))
-    commandLine("npm", "install", "--prefix", "frontend")
-    doLast {
-        println("We Install")
-    }
-}
-
-// Task to build frontend
-task buildFrontend(type: Exec) {
-    dependsOn("installFrontend")
-    inputs.dir(file("frontend"))
-    outputs.dir(file("frontend/build"))
-    commandLine("npm", "run", "build", "--prefix", "frontend")
-    doLast {
-        println("We built")
-    }
-}
-
-task copyFrontend(type: Sync) {
-    dependsOn("buildFrontend")
-    from(file("./frontend/build"))
-    into(file("$buildDir/resources/main/static"))
-    doLast {
-        println("copied built frontend to static resources")
-    }
-}
-
-tasks.resolveMainClassName {
-    dependsOn tasks.copyFrontend
-}
-
-jar {
-    dependsOn copyFrontend
-}
-
-// Define cleanFrontend task
-task cleanFrontend(type: Delete) {
-    delete(file("./frontend/build"))
-    delete(file("./src/main/resources/static"))
-}
-
-bootRun {
-    systemProperty "spring.profiles.active", "local" // Set the active profile here
-}
-
-
-// Make clean depend on cleanFrontend
-clean.dependsOn cleanFrontend
-
-// Explicitly declare resolveMainClassName depends on copyFrontend
-tasks.resolveMainClassName.dependsOn copyFrontend
-
-// Explicitly declare compileTestJava depends on copyFrontend
-tasks.compileTestJava.dependsOn copyFrontend
-
-
 bootRun {
     systemProperty "spring.profiles.active", "local" // Set the active profile here
 }
@@ -297,49 +206,11 @@ We will now verify the application boots and connects to the database:
   <img src="img/img-009.png" width="100%" title="hover text">
 </p>
 
-
-### `Frontend Setup`
-
-To bootstrap a frontend, we will use `React`.
-
-- Bootstrap a react project:
-
-While in the root folder of your project, run the following command. Notice, it will create a new folder called `frontend` containing your frontend project files:
-
-```shell
-npx create-create-app frontend
-# note: you may need to install node to do this
-```
-
-<p align="center">
-  <img src="img/img-010.png" width="100%" title="hover text">
-</p>
-
-```shell
-cd frontend/
-```
-
-<p align="center">
-  <img src="img/img-011.png" width="100%" title="hover text">
-</p>
-
-- Test to see if your frontend runs correctly:
-
-```shell
-npm run start
-```
-
-- Navigate to `localhost:3000` to verify.
-
-- At this point you've bootstrapped a react frontend, a spring boot backend, and a postgres database. Let's now make an application!
-
-### Creating a Functioning Application to Containerize
+####  Backend setup
 
 `Disclaimer:` The purpose of this class is `containerization` and `familiarizing` with the structure of Software factory applications, and how the different components (`frontend, backend, database`) interact with one-another. At times, troubleshooting outages relies on understanding how application connections work.
 
 At this time, we will briefly describe, then copy and paste code into each file, to demonstrate how it works, but we will not be deep diving into how to program in java or react!
-
-####  Backend setup
 
 In the `src/main/java/demoswfappjoshua/demoswfappjoshua` folder, create three directories:
 
@@ -568,6 +439,51 @@ http://localhost:8080/api/soldier/home (you should see a simple message)
 ```
 
 Your app is now connected to your database!
+
+
+
+### `Frontend Setup`
+
+To bootstrap a frontend, we will use `React`.
+
+Install node.js to begin:
+
+```shell
+brew install node
+```
+
+- Bootstrap a react project:
+
+While in the root folder of your project, run the following command. Notice, it will create a new folder called `frontend` containing your frontend project files:
+
+```shell
+npx create-react-app frontend
+# note: you may need to install node to do this
+```
+
+<p align="center">
+  <img src="img/img-010.png" width="100%" title="hover text">
+</p>
+
+```shell
+cd frontend/
+```
+
+<p align="center">
+  <img src="img/img-011.png" width="100%" title="hover text">
+</p>
+
+- Test to see if your frontend runs correctly:
+
+```shell
+npm run start
+```
+
+- Navigate to `localhost:3000` to verify.
+
+- At this point you've bootstrapped a react frontend, a spring boot backend, and a postgres database. Let's now make an application!
+
+### Creating a Functioning Application to Containerize
 
 ### Frontend
 
@@ -1229,7 +1145,7 @@ Apply the manifest to the cluster:
 kubectl apply -f ./manifests/apps/deployment.yaml
 ```
 
-Port forward the application to verify functionalilty:
+Port forward the application to verify functionality:
 
 ```shell
 kubectl get svc -n <yournamespace>
