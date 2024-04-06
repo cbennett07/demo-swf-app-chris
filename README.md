@@ -518,7 +518,7 @@ package demoswfapptest.demoswfapptest.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import demoswfappjoshua.demoswfappjoshua.model.Soldier;
+import demoswfapptest.demoswfapptest.model.Soldier;
 
 @Repository
 public interface SoldierRepository extends JpaRepository<Soldier, Long> {
@@ -528,7 +528,6 @@ public interface SoldierRepository extends JpaRepository<Soldier, Long> {
 - The `SoldierRepository interface` is a part of a Spring Boot application, serving as a repository for the Soldier entity. `Handles database operations` for the Soldier entity. By extending JpaRepository<Soldier, Long>, the SoldierRepository gains access to methods like `save`, `findById`, `findAll`, `deleteById`, `etc.`, without needing to implement these methods manually.
 
 - `Spring Data JPA`: Provides an easy and efficient way to interact with the database without writing boilerplate code.
-Spring Framework: Provides a powerful framework for building Java-based applications.
 
 - The `SoldierRepository interface` can be used to perform CRUD operations on the Soldier entity.
 
