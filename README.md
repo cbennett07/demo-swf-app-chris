@@ -6,6 +6,8 @@
 
 - Fork the repo in Gitlab named `demo-swf-app-<your-name>` and clone it down locally. Change directory to the root of the project:
 
+https://web.git.mil/swf/bridge-program/platform-bridge/demo-swf-app-your-name
+
 <p align="center">
   <img src="img/img-001.png" width="100%" title="hover text">
 </p>
