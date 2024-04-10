@@ -65,15 +65,28 @@ Configure Postgres:
 - Install:
 
 https://formulae.brew.sh/formula/postgresql@16
+
 ```shell
 brew install postgresql@16
+```
+
+- Add psql to your path:
+
+```shell
+brew link postgresql@16 --force
+```
+
+Start a database:
+
+```shell
+brew services start postgresql@16
 ```
 
 - Verify connectivity to the local database. Connect to the database:
 
 ```shell
 # if using mac
-psql postgres
+psql postgres -U postgres
 
 # if using linux
 sudo -u postgres psql
