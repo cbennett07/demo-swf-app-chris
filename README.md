@@ -41,22 +41,6 @@ Bootstrap a SpringBoot Project:
   <img src="img/img-007.png" width="100%" title="hover text">
 </p>
 
-- The folder structure should look like the image below, with the exception of the name:
-- `Update`: there will be a couple of pre-staged files not pictured:
-
-```
-- app-logo/<swf image for the app>
-- img/<images used for readme>
-- app-manifests/<blank kubernetes manifests to add content to later>
-- postgres/<helm files for postgres helm deployment>
-- .dockerignore # used to ignore these files when building a docker container
-```
-
-
-<p align="center">
-  <img src="img/img-008.png" width="100%" title="hover text">
-</p>
-
 
 ### `Database Setup`
 
@@ -86,10 +70,10 @@ brew services start postgresql@16
 
 ```shell
 # if using mac
-psql postgres -U postgres
 
-# if using linux
-sudo -u postgres psql
+psql postgres
+
+# psql postgres -U postgres if postgres user exists
 ```
 Run the following SQL commands to do the following:
 - Create a user and set a default password
@@ -111,6 +95,51 @@ Exit the database:
 
 ```shell
 exit
+```
+
+
+Check your java version (`if installed`):
+
+```shell
+# check your version
+
+/usr/libexec/java_home -V
+```
+
+If you're `not` running `java 17`, run the following command to remove your version:
+
+```
+sudo rm -fr /Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin
+sudo rm -fr /Library/PreferencePanes/JavaControlPanel.prefPane
+sudo rm -fr ~/Library/Application\ Support/Oracle/Java
+```
+
+Install `java`:
+
+```shell
+brew install jenv
+```
+
+Setup your java path:
+
+```shell
+# if using zsh
+echo 'export PATH="$HOME/.jenv/bin:$PATH"' >> ~/.zshrc                                                                                         ░▒▓ ✔  
+echo 'eval "$(jenv init -)"' >> ~/.zshrc                
+source ~/.zshrc
+
+# if using bash
+echo 'export PATH="$HOME/.jenv/bin:$PATH"' >> ~/.bash_profile
+echo 'eval "$(jenv init -)"' >> ~/.bash_profile               
+```
+
+Check your version:
+
+```shell
+java  --version
+openjdk 17.0.10 2024-01-16
+OpenJDK Runtime Environment Homebrew (build 17.0.10+0)
+OpenJDK 64-Bit Server VM Homebrew (build 17.0.10+0, mixed mode, sharing)
 ```
 
 - Now, run our Spring Boot app using the `./gradlew bootRun` command, and connect to the database (`it should fail`) because we have not setup the proper connection in `src/main/resources/application.properties`:
@@ -146,9 +175,11 @@ spring.jpa.hibernate.ddl-auto=update
 
 Take a look at this file, and study the values that are set here.
 
-- Now, we are going to create `two` new `yaml` files, one to connect to our local postgres database, and one to connect to our database that will run in a kubernetes cluster. These two yaml files, perform the same function as the `application.properties` file, so we will now delete that file and create two new files:
+- Now, we are going to create `two` new `yaml` files, one to connect to our local postgres database, and one to connect to our database that will run in a kubernetes cluster. These two yaml files, perform the same function as the `application.properties` file. 
 
-Create these files in the exact same folder that the `application.properties` file is in.
+`We will now delete that file and create two new files:`
+
+Create these files in the `exact same` folder that the `application.properties` file is in.
 
 ```
 - application-prod.yaml         
@@ -436,7 +467,7 @@ SELECT * FROM soldier;
 Now, run the backend application to verify that the backend queries the database:
 
 ```shell
-./gradle bootRun
+./gradlew bootRun
 ```
 
 Navigate to:
@@ -838,7 +869,7 @@ Axios is used to make asynchronous HTTP requests to the backend API.
 
 There is a image called `download.jpg` located in the app-logo/download.jpg folder: Drag it into the following folder (the same folder the App.js is in):
 
-```
+```shell
 app-logo/download.jpg > frontend/src/download.jpg
 ```
 
