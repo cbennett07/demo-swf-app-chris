@@ -1,0 +1,26 @@
+global:
+  postgresql:
+    auth:
+      postgresPassword: "postgres"
+      username: "postgres"
+      password: "postgres"
+      database: "postgres"
+
+primary:
+  persistence:
+    enabled: true
+
+  initdb:
+    scripts:
+      init.sql: |
+        CREATE SCHEMA IF NOT EXISTS soldier;
+        CREATE TABLE IF NOT EXISTS soldier (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255),
+          rank VARCHAR(255)
+        );
+    user: postgres
+    password: postgres
+
+volumePermissions:
+  enabled: true

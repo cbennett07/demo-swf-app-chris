@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demo-swf-app-chris
+  name: demo-swf-app-chris
+  namespace: demo-swf-app-chris
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: demo-swf-app-chris
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: demo-swf-app-chris
+    spec:
+      containers:
+      - image: cbennett07/demo-swf-app-chris:latest
+        name: demo-swf-app-chris
+        env:
+          - name: API_BASE_URL
+            value: "http://demo-swf-app-chris.demo-swf-chris.svc.cluster.local:8080/api/soldier"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: demo-swf-app-chris
+  name: demo-swf-app-chris-service
+  namespace: demo-swf-app-chris
+spec:
+  ports:
+  - name: cluster-ip-port
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: demo-swf-app-chris
+  type: ClusterIP

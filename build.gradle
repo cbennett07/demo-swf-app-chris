@@ -1,0 +1,75 @@
+plugins {
+   id 'java'
+   id 'org.springframework.boot' version '3.2.4'
+   id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'demoswfappchris'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+   mavenCentral()
+}
+
+dependencies {
+   compileOnly 'org.projectlombok:lombok:1.18.22'
+   annotationProcessor 'org.projectlombok:lombok:1.18.22'
+   implementation 'org.springframework.boot:spring-boot-starter-web'
+   implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+   runtimeOnly 'org.postgresql:postgresql'
+   testImplementation 'org.springframework.boot:spring-boot-starter-test'
+   implementation 'com.fasterxml.jackson.core:jackson-databind'
+}
+
+task installFrontend(type: Exec) {
+   inputs.file(file("./frontend/package-lock.json"))
+   inputs.file(file("./frontend/package.json"))
+   commandLine("npm", "install", "--prefix", "frontend")
+   doLast {
+       println("We Install")
+   }
+}
+
+task buildFrontend(type: Exec) {
+   dependsOn("installFrontend")
+   inputs.dir(file("frontend"))
+   outputs.dir(file("frontend/build"))
+   commandLine("npm", "run", "build", "--prefix", "frontend")
+   doLast {
+       println("We built")
+   }
+}
+
+task copyFrontend(type: Sync) {
+   dependsOn("buildFrontend")
+   from(file("./frontend/build"))
+   into(file("$buildDir/resources/main/static"))
+   doLast {
+       println("copied built frontend to static resources")
+   }
+}
+
+tasks.resolveMainClassName {
+   dependsOn tasks.copyFrontend
+}
+
+jar {
+   dependsOn copyFrontend
+}
+
+task cleanFrontend(type: Delete) {
+   delete(file("./frontend/build"))
+   delete(file("./src/main/resources/static"))
+}
+
+bootRun {
+   systemProperty "spring.profiles.active", "local"
+}
+
+clean.dependsOn cleanFrontend
+
+tasks.resolveMainClassName.dependsOn copyFrontend
+
+tasks.compileTestJava.dependsOn copyFrontend
+

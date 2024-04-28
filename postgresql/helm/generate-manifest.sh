@@ -13,7 +13,7 @@ exit_with_error() {
 }
 
 # ONLY MODIFY THESE VARIABLES
-export DESIRED_NAMESPACE='demo-swf-app-millett'
+export DESIRED_NAMESPACE='demo-swf-app-chris'
 export APP_NAME='postgresql'
 export HELM_TEMPLATE_VERSION='15.1.4'
 export HELM_REPO_FOLDER="bitnami"
