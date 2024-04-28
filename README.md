@@ -1231,3 +1231,4 @@ Navigate to localhost:8080 to verify the app is running correctly. If so, you ha
 </p>
 
 This concludes our lab!# demo-swf-app-chris
+# demo-swf-app-chris
