@@ -1230,4 +1230,4 @@ Navigate to localhost:8080 to verify the app is running correctly. If so, you ha
   <img src="img/img-013.png" width="100%" title="hover text">
 </p>
 
-This concludes our lab!
+This concludes our lab!# demo-swf-app-chris
