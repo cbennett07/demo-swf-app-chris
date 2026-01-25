@@ -89,9 +89,34 @@ Custom tasks chain: `installFrontend` → `buildFrontend` → `copyFrontend` →
 - Frontend gets bundled into `src/main/resources/static` and served by Spring Boot
 
 ### Infrastructure
-- `app-manifests/` - Namespace and Deployment/Service YAML
+- `app-manifests/` - Namespace and Deployment/Service YAML (Kubernetes)
 - `postgresql/helm/` - Bitnami PostgreSQL chart values and template generator
+- `terraform/` - AWS Fargate deployment with RDS Aurora PostgreSQL
 - `Dockerfile` - Multi-stage build producing uber JAR with `SPRING_PROFILES_ACTIVE=prod`
+
+### AWS Fargate Deployment (terraform/)
+Deploy to AWS Fargate with RDS Aurora PostgreSQL Serverless v2:
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+
+# After infrastructure is up, push Docker image
+./deploy.sh
+```
+
+**Components:**
+- VPC with public/private subnets across 2 AZs
+- Application Load Balancer with ACM SSL certificate
+- ECS Fargate service (2 tasks, auto-scaling)
+- RDS Aurora PostgreSQL Serverless v2
+- ECR repository for Docker images
+
+**Post-deployment:**
+1. Add ACM validation CNAME to Cloudflare (see `terraform output acm_validation_records`)
+2. Add CNAME pointing domain to ALB (see `terraform output alb_dns_name`)
+3. Set Cloudflare proxy to DNS-only (grey cloud) for SSL to work
 
 ## Database Schema
 ```sql
