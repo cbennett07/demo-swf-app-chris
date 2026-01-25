@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 import LogoImage from './download.jpg';
 
-const baseUrl = process.env.API_BASE_URL || 'http://localhost:8080/api/soldier';
+const baseUrl = process.env.REACT_APP_API_BASE_URL || '/api/soldier';
 
 const Logo = () => (
   <div className="LogoContainer">
