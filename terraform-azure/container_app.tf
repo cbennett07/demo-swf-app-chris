@@ -5,6 +5,10 @@ resource "azurerm_container_app_environment" "main" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
   infrastructure_subnet_id   = azurerm_subnet.container_apps.id
 
+  lifecycle {
+    ignore_changes = [infrastructure_resource_group_name]
+  }
+
   tags = var.tags
 }
 

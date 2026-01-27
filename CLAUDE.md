@@ -38,7 +38,8 @@ cd frontend && npm test
 ### Docker
 ```bash
 # Build image (multi-stage: builds frontend+backend, outputs production JAR)
-docker build -t <registry>/demo-swf-app-chris:latest .
+# Always use --platform linux/amd64 (dev machine is Apple Silicon, deploy targets are AMD64)
+docker build --platform linux/amd64 -t <registry>/demo-swf-app-chris:latest .
 
 # Push to registry
 docker push <registry>/demo-swf-app-chris:latest
@@ -135,7 +136,7 @@ terraform apply
 
 # After infrastructure is up, build and push Docker image
 cd ..
-docker build -t demo-swf-app-chris:latest .
+docker build --platform linux/amd64 -t demo-swf-app-chris:latest .
 az acr login --name $(cd terraform-azure && terraform output -raw acr_name)
 docker tag demo-swf-app-chris:latest $(cd terraform-azure && terraform output -raw acr_login_server)/demo-swf-app-chris:latest
 docker push $(cd terraform-azure && terraform output -raw acr_login_server)/demo-swf-app-chris:latest

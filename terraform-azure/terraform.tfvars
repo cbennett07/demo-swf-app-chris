@@ -1,5 +1,5 @@
 # Azure Configuration
-azure_location = "eastus"
+azure_location = "eastus2"
 project_name   = "demo-swf-app-chris"
 
 # VNet Configuration
