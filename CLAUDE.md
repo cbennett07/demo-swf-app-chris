@@ -92,6 +92,7 @@ Custom tasks chain: `installFrontend` → `buildFrontend` → `copyFrontend` →
 - `app-manifests/` - Namespace and Deployment/Service YAML (Kubernetes)
 - `postgresql/helm/` - Bitnami PostgreSQL chart values and template generator
 - `terraform/` - AWS Fargate deployment with RDS Aurora PostgreSQL
+- `terraform-azure/` - Azure Container Apps deployment with PostgreSQL Flexible Server
 - `Dockerfile` - Multi-stage build producing uber JAR with `SPRING_PROFILES_ACTIVE=prod`
 
 ### AWS Fargate Deployment (terraform/)
@@ -117,6 +118,48 @@ terraform apply
 1. Add ACM validation CNAME to Cloudflare (see `terraform output acm_validation_records`)
 2. Add CNAME pointing domain to ALB (see `terraform output alb_dns_name`)
 3. Set Cloudflare proxy to DNS-only (grey cloud) for SSL to work
+
+### Azure Container Apps Deployment (terraform-azure/)
+Deploy to Azure Container Apps with PostgreSQL Flexible Server:
+```bash
+cd terraform-azure
+./deploy.sh
+```
+
+Or manually:
+```bash
+cd terraform-azure
+terraform init
+terraform plan
+terraform apply
+
+# After infrastructure is up, build and push Docker image
+cd ..
+docker build -t demo-swf-app-chris:latest .
+az acr login --name $(cd terraform-azure && terraform output -raw acr_name)
+docker tag demo-swf-app-chris:latest $(cd terraform-azure && terraform output -raw acr_login_server)/demo-swf-app-chris:latest
+docker push $(cd terraform-azure && terraform output -raw acr_login_server)/demo-swf-app-chris:latest
+
+# Update container app with new image
+az containerapp update \
+  --name demo-swf-app-chris \
+  --resource-group demo-swf-app-chris-rg \
+  --image $(cd terraform-azure && terraform output -raw acr_login_server)/demo-swf-app-chris:latest
+```
+
+**Components:**
+- VNet with Container Apps, database, and default subnets
+- Azure Container Apps Environment with built-in HTTPS ingress
+- Azure Container App (0.25 vCPU, 0.5Gi, 2-6 replicas with HTTP auto-scaling)
+- Azure Database for PostgreSQL Flexible Server (Burstable B1ms, v16)
+- Azure Container Registry (Basic SKU)
+- Log Analytics Workspace
+
+**Notes:**
+- No custom domain — uses default `*.azurecontainerapps.io` URL
+- DB admin username is `psqladmin` (Azure forbids `postgres` as admin name)
+- DB password auto-generated and passed to container as a secret
+- App URL available via `terraform output application_url`
 
 ## Database Schema
 ```sql
