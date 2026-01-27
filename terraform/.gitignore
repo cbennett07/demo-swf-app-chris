@@ -24,5 +24,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+# Plan files
+tfplan
+*.tfplan
+
 # Lock file
 .terraform.lock.hcl
