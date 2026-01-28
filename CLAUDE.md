@@ -4,7 +4,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Full-stack containerized CRUD application demonstrating Software Factory deployment practices. Manages soldier records (name, rank) with a Spring Boot backend, React frontend, and PostgreSQL database, deployed to Kubernetes.
+Full-stack containerized CRUD application demonstrating Software Factory deployment practices. Manages soldier records (name, rank) with a Spring Boot backend, React frontend, and PostgreSQL database.
+
+## Current Live Deployment
+- **URL**: https://cb-dso.dev
+- **Platform**: AWS Fargate (us-east-1), account `992382591649`
+- **Domain/DNS**: `cb-dso.dev` managed via Cloudflare (DNS-only mode, grey cloud)
+- **SSL**: ACM certificate with DNS validation
+- **Database**: Aurora PostgreSQL Serverless v2
+- **Terraform state**: Local, stored in `terraform/terraform.tfstate`
+- **Container registry**: ECR at `992382591649.dkr.ecr.us-east-1.amazonaws.com/demo-swf-app-chris`
+
+### Redeploying After Code Changes
+```bash
+# 1. Build image for AMD64
+docker build --platform linux/amd64 -t demo-swf-app-chris:latest .
+
+# 2. Push to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 992382591649.dkr.ecr.us-east-1.amazonaws.com
+docker tag demo-swf-app-chris:latest 992382591649.dkr.ecr.us-east-1.amazonaws.com/demo-swf-app-chris:latest
+docker push 992382591649.dkr.ecr.us-east-1.amazonaws.com/demo-swf-app-chris:latest
+
+# 3. Force new ECS deployment
+aws ecs update-service --cluster demo-swf-app-chris-cluster --service demo-swf-app-chris-service --force-new-deployment --region us-east-1
+```
 
 ## Build & Run Commands
 
