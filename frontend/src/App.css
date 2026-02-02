@@ -5,29 +5,30 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #000000; 
-  color: #c9d1d9; 
+  background: linear-gradient(145deg, #000000 0%, #0d1117 50%, #000000 100%);
+  background-attachment: fixed;
+  color: #c9d1d9;
+  min-height: 100vh;
 }
 
 .App {
   text-align: center;
-  padding-bottom: 15px;
+  padding: 40px 20px 60px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
 }
 
 .App-header {
-  background-color: #000000; 
+  background-color: #000000;
   min-height: 15vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: #bdb000; 
+  color: #bdb000;
   width: 100%;
 }
 
@@ -42,94 +43,267 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 800px;
+  gap: 40px;
 }
 
+/* Logo Section */
+.LogoContainer {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.LogoImage {
+  width: 120px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(189, 176, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.LogoImage:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 30px rgba(189, 176, 0, 0.3);
+}
+
+/* Form Container */
 .FormContainer {
-  max-width: 300px;
+  background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 32px;
   width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.FormContainer h2 {
+  margin: 0 0 24px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #bdb000;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #30363d;
+  padding-bottom: 16px;
 }
 
 .SoldierForm {
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .FormLabel {
-  margin-right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .FormInput {
   width: 100%;
-  padding: 10px; 
+  padding: 12px 16px;
   font-size: 16px;
-  border: 1px solid #30363d; 
-  border-radius: 4px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
   box-sizing: border-box;
-  background-color: #0d1117; 
-  color: #ccc900; 
+  background-color: #0d1117;
+  color: #c9d1d9;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.FormInput:hover {
+  border-color: #484f58;
+  background-color: #161b22;
+}
+
+.FormInput:focus {
+  outline: none;
+  border-color: #bdb000;
+  box-shadow: 0 0 0 3px rgba(189, 176, 0, 0.15);
+  background-color: #161b22;
+}
+
+.FormInput::placeholder {
+  color: #484f58;
 }
 
 .FormButton {
   width: 100%;
-  margin-top: 10px;
-  padding: 10px;
+  margin-top: 8px;
+  padding: 14px 20px;
   font-size: 16px;
-  background-color: #252525; 
-  color: white;
+  font-weight: 600;
+  background: linear-gradient(180deg, #bdb000 0%, #a39900 100%);
+  color: #000000;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(189, 176, 0, 0.2);
 }
 
-.FormButton:hover {
-  background-color: #beb200;
+.FormButton:hover:not(:disabled) {
+  background: linear-gradient(180deg, #d4c700 0%, #bdb000 100%);
+  box-shadow: 0 6px 20px rgba(189, 176, 0, 0.3);
+  transform: translateY(-1px);
 }
 
+.FormButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(189, 176, 0, 0.2);
+}
+
+.FormButton:disabled {
+  background: #21262d;
+  color: #484f58;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Hide default br elements from form */
+.SoldierForm br {
+  display: none;
+}
+
+/* Table Container */
 .TableContainer {
-  margin-top: 2px;
-  padding: 10px;
+  background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 700px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.TableContainer h2 {
+  margin: 0 0 24px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #bdb000;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #30363d;
+  padding-bottom: 16px;
 }
 
 .SoldierTable {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 2px;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #30363d;
 }
 
 .SoldierTable th,
 .SoldierTable td {
-  border: 1px solid #30363d;
-  padding: 8px;
-  text-align: center; 
-  border-radius: 8px; 
-  width: 2in; 
+  padding: 14px 16px;
+  text-align: center;
 }
 
 .SoldierTable th {
-  background-color: #181818; 
-  color: #c9d1d9; 
+  background: linear-gradient(180deg, #21262d 0%, #1a1f24 100%);
+  color: #bdb000;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #30363d;
 }
 
+.SoldierTable td {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  border-bottom: 1px solid #21262d;
+  transition: background-color 0.15s ease;
+}
+
+.SoldierTable tbody tr:hover td {
+  background-color: #161b22;
+}
+
+.SoldierTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Custom checkbox styling */
+.SoldierTable input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #bdb000;
+}
 
 .deleteButton {
-  background-color: #b3a100; 
-  color: white;
-  padding: 8px 16px;
+  background: linear-gradient(180deg, #b3a100 0%, #998a00 100%);
+  color: #000000;
+  padding: 12px 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(179, 161, 0, 0.2);
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: linear-gradient(180deg, #cbb800 0%, #b3a100 100%);
+  box-shadow: 0 6px 20px rgba(179, 161, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.deleteButton:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .deleteButton:disabled {
-  background-color: #30363d; 
-  color: #6a737d; 
+  background: #21262d;
+  color: #484f58;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
-.LogoContainer {
-  text-align: center; 
+/* Empty state for table */
+.SoldierTable tbody:empty::after {
+  content: 'No soldiers found';
+  display: block;
+  padding: 40px;
+  color: #484f58;
+  font-style: italic;
 }
 
-.LogoImage {
-  width: 100px; 
-  height: auto; 
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .App {
+    padding: 20px 16px 40px;
+  }
+
+  .FormContainer,
+  .TableContainer {
+    padding: 24px 20px;
+  }
+
+  .SoldierTable th,
+  .SoldierTable td {
+    padding: 10px 8px;
+    font-size: 0.875rem;
+  }
+
+  .SoldierTable th {
+    font-size: 0.65rem;
+  }
 }
