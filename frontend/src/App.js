@@ -13,7 +13,8 @@ const Logo = () => (
 
 const App = () => {
   const [soldiers, setSoldiers] = useState([]);
-  const [name, setName] = useState('');
+  const [fname, setFname] = useState('');
+  const [lname, setLname] = useState('');
   const [rank, setRank] = useState('');
   const [selectedSoldiers, setSelectedSoldiers] = useState([]);
   const [showTable, setShowTable] = useState(false);
@@ -24,9 +25,9 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    // Check if both name and rank are filled
-    setIsFormValid(name.trim() !== '' && rank.trim() !== '');
-  }, [name, rank]);
+    // Check if fname, lname, and rank are filled
+    setIsFormValid(fname.trim() !== '' && lname.trim() !== '' && rank.trim() !== '');
+  }, [fname, lname, rank]);
 
   const fetchSoldiers = async () => {
     try {
@@ -40,16 +41,17 @@ const App = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !rank) {
+    if (!fname || !lname || !rank) {
       alert('Please fill in all fields');
       return;
     }
 
     try {
-      const response = await axios.post(`${baseUrl}/post`, { name, rank });
+      const response = await axios.post(`${baseUrl}/post`, { fname, lname, rank });
       console.log('Data submitted:', response.data);
       fetchSoldiers(); // Refresh soldiers after submission
-      setName('');
+      setFname('');
+      setLname('');
       setRank('');
     } catch (error) {
       console.error('Error submitting data:', error);
@@ -91,18 +93,29 @@ const App = () => {
           <h2>Add Soldier</h2>
           <form onSubmit={handleSubmit} className="SoldierForm">
             <label className="FormLabel">
-              Enter Name:
+              First Name:
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={fname}
+                onChange={(e) => setFname(e.target.value)}
                 className="FormInput"
                 required
               />
             </label>
             <br />
             <label className="FormLabel">
-              Enter Rank:
+              Last Name:
+              <input
+                type="text"
+                value={lname}
+                onChange={(e) => setLname(e.target.value)}
+                className="FormInput"
+                required
+              />
+            </label>
+            <br />
+            <label className="FormLabel">
+              Rank:
               <input
                 type="text"
                 value={rank}
@@ -124,7 +137,8 @@ const App = () => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Name</th>
+                  <th>First Name</th>
+                  <th>Last Name</th>
                   <th>Rank</th>
                   <th>Delete</th>
                 </tr>
@@ -133,7 +147,8 @@ const App = () => {
                 {soldiers.map(soldier => (
                   <tr key={soldier.id}>
                     <td>{soldier.id}</td>
-                    <td>{soldier.name}</td>
+                    <td>{soldier.fname}</td>
+                    <td>{soldier.lname}</td>
                     <td>{soldier.rank}</td>
                     <td>
                       <input
