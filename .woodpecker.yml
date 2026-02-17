@@ -12,8 +12,8 @@ steps:
   - name: build
     image: eclipse-temurin:17-jdk
     volumes:
-      - /tmp/woodpecker-cache/gradle:/root/.gradle
-      - /tmp/woodpecker-cache/npm:/root/.npm
+      - /home/cab/woodpecker-cache/gradle:/root/.gradle
+      - /home/cab/woodpecker-cache/npm:/root/.npm
     commands:
       - apt-get update && apt-get install -y npm > /dev/null 2>&1
       - chmod +x gradlew
@@ -24,7 +24,7 @@ steps:
   - name: unit-test-backend
     image: eclipse-temurin:17-jdk
     volumes:
-      - /tmp/woodpecker-cache/gradle:/root/.gradle
+      - /home/cab/woodpecker-cache/gradle:/root/.gradle
     commands:
       - chmod +x gradlew
       - ./gradlew compileTestJava test -x installFrontend -x buildFrontend -x copyFrontend -x resolveMainClassName --no-daemon
@@ -33,7 +33,7 @@ steps:
   - name: unit-test-frontend
     image: node:18-alpine
     volumes:
-      - /tmp/woodpecker-cache/npm:/root/.npm
+      - /home/cab/woodpecker-cache/npm:/root/.npm
     commands:
       - cd frontend
       - npm ci
@@ -44,7 +44,7 @@ steps:
   - name: sast-semgrep
     image: semgrep/semgrep:latest
     volumes:
-      - /tmp/woodpecker-cache/semgrep:/root/.cache/semgrep
+      - /home/cab/woodpecker-cache/semgrep:/root/.cache/semgrep
     commands:
       - semgrep scan --config auto --severity ERROR --severity WARNING --no-git --json > semgrep-results.json || true
       - semgrep scan --config auto --severity ERROR --severity WARNING --no-git 2>&1 | tail -30
@@ -54,7 +54,7 @@ steps:
   - name: dependency-scan
     image: aquasec/trivy:latest
     volumes:
-      - /tmp/woodpecker-cache/trivy:/root/.cache/trivy
+      - /home/cab/woodpecker-cache/trivy:/root/.cache/trivy
     commands:
       - trivy fs --scanners vuln --severity HIGH,CRITICAL . || true
       - echo "✓ Dependency scan complete"
@@ -63,7 +63,7 @@ steps:
   - name: lint-frontend
     image: node:18-alpine
     volumes:
-      - /tmp/woodpecker-cache/npm:/root/.npm
+      - /home/cab/woodpecker-cache/npm:/root/.npm
     commands:
       - cd frontend
       - npm ci
@@ -84,7 +84,7 @@ steps:
     image: aquasec/trivy:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp/woodpecker-cache/trivy:/root/.cache/trivy
+      - /home/cab/woodpecker-cache/trivy:/root/.cache/trivy
     commands:
       - trivy image --severity HIGH,CRITICAL demo-swf-app-chris:latest || true
       - echo "✓ Container scan complete"
