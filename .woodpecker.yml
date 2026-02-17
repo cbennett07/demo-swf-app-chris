@@ -21,9 +21,8 @@ steps:
   - name: unit-test-backend
     image: eclipse-temurin:17-jdk
     commands:
-      - apt-get update && apt-get install -y npm > /dev/null 2>&1
       - chmod +x gradlew
-      - ./gradlew test --no-daemon
+      - ./gradlew test -x installFrontend -x buildFrontend -x copyFrontend --no-daemon
       - echo "✓ Backend tests passed"
 
   - name: unit-test-frontend
