@@ -45,9 +45,10 @@ steps:
     image: semgrep/semgrep:latest
     volumes:
       - /home/cab/woodpecker-cache/semgrep:/root/.cache/semgrep
+    environment:
+      - SEMGREP_IN_DOCKER=0
     commands:
-      - semgrep scan --config auto --severity ERROR --severity WARNING --no-git-ignore --json > semgrep-results.json || true
-      - semgrep scan --config auto --severity ERROR --severity WARNING --no-git-ignore 2>&1 | tail -30
+      - semgrep scan --config auto --severity ERROR --severity WARNING --no-git-ignore . || true
       - echo "✓ SAST scan complete"
 
   # ── Stage 5: Dependency Scanning ──
