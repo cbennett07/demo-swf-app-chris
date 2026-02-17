@@ -10,10 +10,9 @@ steps:
 
   # ── Stage 7: Container Build ──
   - name: container-build
-    image: plugins/docker
-    privileged: true
-    settings:
-      repo: demo-swf-app-chris
-      tags: latest
-      dockerfile: Dockerfile
-      dry_run: true
+    image: docker:24
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - docker build -t demo-swf-app-chris:latest .
+      - echo "✓ Container build successful"
