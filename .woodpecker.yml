@@ -8,6 +8,55 @@ steps:
       - git clone http://192.168.86.23:3000/admin/demo-swf-app-chris.git .
       - echo "✓ Clone successful"
 
+  # ── Stage 2: Build (Gradle + Frontend) ──
+  - name: build
+    image: eclipse-temurin:17-jdk
+    commands:
+      - apt-get update && apt-get install -y npm > /dev/null 2>&1
+      - chmod +x gradlew
+      - ./gradlew build -x test --no-daemon
+      - echo "✓ Build successful"
+
+  # ── Stage 3: Unit Tests ──
+  - name: unit-test-backend
+    image: eclipse-temurin:17-jdk
+    commands:
+      - chmod +x gradlew
+      - ./gradlew compileTestJava test -x installFrontend -x buildFrontend -x copyFrontend -x resolveMainClassName --no-daemon
+      - echo "✓ Backend tests passed"
+
+  - name: unit-test-frontend
+    image: node:18-alpine
+    commands:
+      - cd frontend
+      - npm ci
+      - CI=true npm test -- --watchAll=false
+      - echo "✓ Frontend tests passed"
+
+  # ── Stage 4: SAST (Static Application Security Testing) ──
+  - name: sast-semgrep
+    image: semgrep/semgrep:latest
+    commands:
+      - semgrep scan --config auto --severity ERROR --severity WARNING --no-git --json > semgrep-results.json || true
+      - semgrep scan --config auto --severity ERROR --severity WARNING --no-git 2>&1 | tail -30
+      - echo "✓ SAST scan complete"
+
+  # ── Stage 5: Dependency Scanning ──
+  - name: dependency-scan
+    image: aquasec/trivy:latest
+    commands:
+      - trivy fs --scanners vuln --severity HIGH,CRITICAL . || true
+      - echo "✓ Dependency scan complete"
+
+  # ── Stage 6: Lint ──
+  - name: lint-frontend
+    image: node:18-alpine
+    commands:
+      - cd frontend
+      - npm ci
+      - npx eslint src/ --max-warnings 50 || true
+      - echo "✓ Frontend lint complete"
+
   # ── Stage 7: Container Build ──
   - name: container-build
     image: docker:24
@@ -16,3 +65,12 @@ steps:
     commands:
       - docker build -t demo-swf-app-chris:latest .
       - echo "✓ Container build successful"
+
+  # ── Stage 8: Container Scan ──
+  - name: container-scan
+    image: aquasec/trivy:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - trivy image --severity HIGH,CRITICAL demo-swf-app-chris:latest || true
+      - echo "✓ Container scan complete"
