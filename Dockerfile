@@ -11,4 +11,6 @@ WORKDIR /app
 COPY --from=build /app/build/libs/demo-swf-app-chris-0.0.1-SNAPSHOT.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
+RUN useradd -r -u 1001 appuser
+USER appuser
 CMD ["java", "-jar", "app.jar"]

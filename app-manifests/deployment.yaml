@@ -19,6 +19,8 @@ spec:
       containers:
       - image: cbennett07/demo-swf-app-chris:latest
         name: demo-swf-app-chris
+        securityContext:
+          allowPrivilegeEscalation: false
         env:
           - name: API_BASE_URL
             value: "http://demo-swf-app-chris.demo-swf-chris.svc.cluster.local:8080/api/soldier"
