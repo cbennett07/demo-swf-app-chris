@@ -22,7 +22,7 @@ steps:
     image: eclipse-temurin:17-jdk
     commands:
       - chmod +x gradlew
-      - ./gradlew test -x installFrontend -x buildFrontend -x copyFrontend --no-daemon
+      - ./gradlew compileTestJava test -x installFrontend -x buildFrontend -x copyFrontend -x resolveMainClassName --no-daemon
       - echo "✓ Backend tests passed"
 
   - name: unit-test-frontend
